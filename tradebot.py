@@ -23,10 +23,16 @@ class Trader():
     def __init__(self,client):
         self.past_prices=[]
         self.ema=0
+
+        self.shortEma=0
+        self.longEma=0
+        self.shortEmaIsLower=False
+
         self.weight=0
         self.client=client
         self.fiat_balance=1000
         self.eth_balance=0
+
 
     def gather_data(self):
         os.system("say 'Initiating systems'")
@@ -52,9 +58,8 @@ class Trader():
 
         for i in range(nrOfElements):
             element = data[i]
-            #print("Time:",element["time"],"Price:",element["usd"])
             longEma.append(element["usd"])
-            if(i>=1200):
+            if(i>=shortDays*24):
                 shortEma.append(element["usd"])
 
         return shortEma, longEma
@@ -78,8 +83,17 @@ class Trader():
         self.fiat_balance= self.fiat_balance + current_price * self.eth_balance
         self.eth_balance=0
 
+    def setShortEma(self, ema):
+        self.shortEma = ema
 
-    def trade(self):
+    def setLongEma(self, ema):
+        self.longEma = ema
+
+    def setShortEmaIsLower(self, bool):
+        self.shortEmaIsLower=bool
+
+    #Old trade func
+    def minuteTrade(self):
         active_trade = False
         i = 0
         while (i==0):
@@ -96,13 +110,69 @@ class Trader():
                 print(self.fiat_balance/1000)
                 active_trade = False
 
+    def hourTrade(self):
+        print("init trading")
+        active_trade = False
+        init=True
+
+        while(True):
+            time.sleep(5)
+
+            shortEmaPrices, longEmaPrices = self.fetch_data()
+            shortEma = self.calculate_emas(shortEmaPrices)
+            longEma = self.calculate_emas(longEmaPrices)
+            
+            if(init==True):
+                self.setShortEma(shortEma)
+                self.setLongEma(longEma)
+
+                if(shortEma<longEma):
+                    self.setShortEmaIsLower(True)
+                else:
+                    self.setShortEmaIsLower(False)
+
+                init=False
+
+            #No trade is made on the first round
+            else:
+                if(self.heuristicFunc(shortEma,longEma)==1):
+                    self.buy(current_price,10)
+                    print("BUY")
+                    active_trade = True
+                elif(self.heuristicFunc(shortEma,longEma)==-1 and active_trade):
+                    print("SELL")
+                    self.sell(current_price)
+                    print(self.fiat_balance/1000)
+                    active_trade = False
+
+    def heuristicFunc(self,newShortEma,newLongEma):
+        #If shortEma crosses longEma from beneath = BUY
+        heuristic=0 
+        if(newShortEma>newLongEma and self.shortEmaIsLower==True):
+            heuristic=1
+
+        #If shortEma crosses longEma from above = SELL
+        elif(newLongEma>newShortEma and self.shortEmaIsLower==False):
+            heuristic=-1
+
+        self.setShortEma(newShortEma)
+        self.setLongEma(newLongEma)
+        if(newShortEma<newLongEma):
+            self.setShortEmaIsLower(True)
+        else:
+            self.setShortEmaIsLower(False)
+
+        print("Heuristic=",heuristic)
+        return heuristic
+
 
 def main():
     client=Gdax("ETH-USD")
     bot = Trader(client)
-    bot.gather_data()
-    bot.calculate_emas()
-    bot.trade()
+    #bot.gather_data()
+    
+    #bot.minuteTrade()
+    bot.hourTrade()
 
 
 

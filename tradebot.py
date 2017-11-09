@@ -43,17 +43,17 @@ class Trader():
         os.system("say 'I am done Mother fucker let us trade some Ethereum'")
         print(self.past_prices)
 
-    def fetch_data(self):
+    def fetch_data(self,long,short):
         resp = requests.get("https://etherchain.org/api/statistics/price")
         robj = json.loads(resp.text)
 
-        nrOfDays = 200
-        shortDays = 50
+        nrOfDays = long
+        shortDays = short
         data = robj["data"][-nrOfDays*24:] #Get the last nrOfDays elements in list
 
         nrOfElements = len(data)
 
-        longEma=[]  #Length of list 200 days*24  
+        longEma=[]  #Length of list 200 days*24
         shortEma=[] #Length of list 50 days*24
 
         for i in range(nrOfElements):
@@ -110,19 +110,18 @@ class Trader():
                 print(self.fiat_balance/1000)
                 active_trade = False
 
-    def hourTrade(self):
+    def trade(self,interval):
         print("init trading")
         active_trade = False
         init=True
 
         while(True):
-            time.sleep(5)
-
+            time.sleep(interval)
             shortEmaPrices, longEmaPrices = self.fetch_data()
             shortEma = self.calculate_emas(shortEmaPrices)
             longEma = self.calculate_emas(longEmaPrices)
-            
-            if(init==True):
+
+            if (init):
                 self.setShortEma(shortEma)
                 self.setLongEma(longEma)
 
@@ -135,11 +134,11 @@ class Trader():
 
             #No trade is made on the first round
             else:
-                if(self.heuristicFunc(shortEma,longEma)==1):
+                if(self.heuristicFunc(shortEma,longEma)== 1):
                     self.buy(current_price,10)
                     print("BUY")
                     active_trade = True
-                elif(self.heuristicFunc(shortEma,longEma)==-1 and active_trade):
+                elif(self.heuristicFunc(shortEma,longEma)== -1 and active_trade):
                     print("SELL")
                     self.sell(current_price)
                     print(self.fiat_balance/1000)
@@ -147,7 +146,7 @@ class Trader():
 
     def heuristicFunc(self,newShortEma,newLongEma):
         #If shortEma crosses longEma from beneath = BUY
-        heuristic=0 
+        heuristic=0
         if(newShortEma>newLongEma and self.shortEmaIsLower==True):
             heuristic=1
 
@@ -169,10 +168,8 @@ class Trader():
 def main():
     client=Gdax("ETH-USD")
     bot = Trader(client)
-    #bot.gather_data()
-    
-    #bot.minuteTrade()
-    bot.hourTrade()
+    time = int(input("Please enter trading interval: "))
+    bot.trade(time)
 
 
 

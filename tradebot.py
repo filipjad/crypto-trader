@@ -47,7 +47,7 @@ class Trader():
 
         nrOfElements = len(data)
 
-        longEma=[] #Length of list 200 days*24  
+        longEma=[]  #Length of list 200 days*24  
         shortEma=[] #Length of list 50 days*24
 
         for i in range(nrOfElements):

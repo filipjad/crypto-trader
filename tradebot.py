@@ -1,7 +1,5 @@
 import gdax,time,os
 from datetime import datetime, timedelta
-import requests
-import json
 
 class Gdax():
     def __init__(self,pair):
@@ -37,6 +35,7 @@ class Trader():
         os.system("say 'I am done Mother fucker let us trade some Ethereum'")
         print(self.past_prices)
 
+<<<<<<< HEAD
     def fetch_data(self):
         resp = requests.get("https://etherchain.org/api/statistics/price")
         robj = json.loads(resp.text)
@@ -66,11 +65,40 @@ class Trader():
         self.past_prices.reverse()
         prices = self.past_prices
         for i in range(5):
+
+
+    def fetch_data(self):
+        resp = requests.get("https://etherchain.org/api/statistics/price")
+        robj = json.loads(resp.text)
+
+        nrOfDays = 200
+        shortDays = 50
+        data = robj["data"][-nrOfDays*24:] #Get the last nrOfDays elements in list
+
+        nrOfElements = len(data)
+
+        longEma=[]  #Length of list 200 days*24  
+        shortEma=[] #Length of list 50 days*24
+
+        for i in range(nrOfElements):
+            element = data[i]
+            #print("Time:",element["time"],"Price:",element["usd"])
+            longEma.append(element["usd"])
+            if(i>=1200):
+                shortEma.append(element["usd"])
+
+        return shortEma, longEma
+
+    def calculate_emas(self,prices):
+        window = len(prices)
+        weight = 2/(window+1)
+        ### Reversed list or not? ###
+        for i in range(window):
             if i == 0:
-                self.ema=prices[i]
+                ema=prices[i]
             else:
-                self.ema = ((prices[i]-self.ema)*self.weight)+self.ema
-        self.past_prices.reverse()
+                ema = ((prices[i]-ema)*weight)+ema
+        return ema
 
     def buy(self,price,amount):
         self.eth_balance = self.eth_balance + amount/price

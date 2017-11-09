@@ -1,5 +1,7 @@
 import gdax,time,os
 from datetime import datetime, timedelta
+import requests
+import json
 
 class Gdax():
     def __init__(self,pair):

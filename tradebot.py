@@ -1,5 +1,7 @@
 import gdax,time,os
 from datetime import datetime, timedelta
+import requests
+import json
 
 class Gdax():
     def __init__(self,pair):
@@ -34,6 +36,29 @@ class Trader():
             self.past_prices.append(self.client.getPrice())
         os.system("say 'I am done Mother fucker let us trade some Ethereum'")
         print(self.past_prices)
+
+    def fetch_data(self):
+        resp = requests.get("https://etherchain.org/api/statistics/price")
+        robj = json.loads(resp.text)
+
+        nrOfDays = 200
+        shortDays = 50
+        data = robj["data"][-nrOfDays*24:] #Get the last nrOfDays elements in list
+
+        nrOfElements = len(data)
+
+        longEma=[] #Length of list 200 days*24  
+        shortEma=[] #Length of list 50 days*24
+
+        for i in range(nrOfElements):
+            element = data[i]
+            #print("Time:",element["time"],"Price:",element["usd"])
+            longEma.append(element["usd"])
+            if(i>=1200):
+                shortEma.append(element["usd"])
+
+        return shortEma, longEma
+
 
     def calculate_emas(self):
         window = len(self.past_prices)

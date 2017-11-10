@@ -43,14 +43,14 @@ class Trader():
         os.system("say 'I am done Mother fucker let us trade some Ethereum'")
         print(self.past_prices)
 
-    def fetch_data(self,long,short):
+    def fetch_data(self,longInterval,shortInterval):
         resp = requests.get("https://etherchain.org/api/statistics/price")
         robj = json.loads(resp.text)
 
-        nrOfDays = long
-        shortDays = short
+        nrOfDays = longInterval
+        shortDays = shortInterval
         data = robj["data"][-nrOfDays*24:] #Get the last nrOfDays elements in list
-
+        #data = robj["data"][-nrOfDays:]  #ONLY FOR TESTING
         nrOfElements = len(data)
 
         longEma=[]  #Length of list 200 days*24
@@ -60,6 +60,7 @@ class Trader():
             element = data[i]
             longEma.append(element["usd"])
             if(i>=shortDays*24):
+            #if(i>=shortDays): #ONLY FOR TESTING
                 shortEma.append(element["usd"])
 
         return shortEma, longEma
@@ -117,7 +118,7 @@ class Trader():
 
         while(True):
             time.sleep(interval)
-            shortEmaPrices, longEmaPrices = self.fetch_data()
+            shortEmaPrices, longEmaPrices = self.fetch_data(4,1)
             shortEma = self.calculate_emas(shortEmaPrices)
             longEma = self.calculate_emas(longEmaPrices)
 
@@ -166,9 +167,11 @@ class Trader():
 
 
 def main():
+    os.system("say 'Initiating systems'")
     client=Gdax("ETH-USD")
     bot = Trader(client)
     time = int(input("Please enter trading interval: "))
+    os.system("say 'I am done Mother fucker let us trade some Ethereum'")
     bot.trade(time)
 
 
